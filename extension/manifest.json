@@ -1,0 +1,32 @@
+{
+    "manifest_version": 3,
+    "name": "LeetCode Companion (Phase 2)",
+    "version": "1.0",
+    "description": "Scrapes LeetCode problem data and analyzes it with Gemini.",
+    "permissions": [
+        "activeTab",
+        "storage"
+    ],
+    "host_permissions": [
+        "https://leetcode.com/*",
+        "http://localhost:8000/*"
+    ],
+    "action": {
+        "default_popup": "popup/popup.html",
+        "default_icon": {
+            "16": "icons/icon16.png",
+            "48": "icons/icon48.png",
+            "128": "icons/icon128.png"
+        }
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "https://leetcode.com/problems/*"
+            ],
+            "js": [
+                "content-scripts/leetcode-scraper.js"
+            ]
+        }
+    ]
+}

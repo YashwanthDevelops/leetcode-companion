@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeetCode Companion</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>LeetCode Companion</h1>
+                <div id="connection-status" class="status-indicator"></div>
+            </div>
+            <div id="stats-bar" class="hidden">
+                <span title="Current Streak">🔥 <span id="streak-count">-</span></span>
+                <span title="Due Today">📅 <span id="due-count">-</span></span>
+            </div>
+        </header>
+
+        <main>
+            <div id="initial-view">
+                <p class="subtitle">Analyze the current problem to get patterns and insights.</p>
+                <button id="analyze-btn" class="primary-btn">Analyze Problem</button>
+            </div>
+
+            <div id="loading-view" class="hidden">
+                <div class="spinner"></div>
+                <p>Analyzing problem with Gemini...</p>
+            </div>
+
+            <div id="error-view" class="hidden">
+                <p class="error-message"></p>
+                <button id="retry-btn" class="secondary-btn">Retry</button>
+            </div>
+
+            <div id="results-view" class="hidden">
+                <div class="section">
+                    <h2>Pattern</h2>
+                    <div id="pattern-badges" class="badges-container"></div>
+                </div>
+
+                <div class="section">
+                    <h2>Complexity</h2>
+                    <div class="complexity-grid">
+                        <div class="complexity-item">
+                            <span class="label">Time</span>
+                            <span id="time-complexity" class="value"></span>
+                        </div>
+                        <div class="complexity-item">
+                            <span class="label">Space</span>
+                            <span id="space-complexity" class="value"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Key Insight</h2>
+                    <p id="key-insight" class="insight-text"></p>
+                </div>
+
+                <div class="section" id="review-section">
+                    <h2>How hard was this?</h2>
+                    <div class="rating-buttons">
+                        <button class="rating-btn easy" data-quality="5">Easy</button>
+                        <button class="rating-btn medium" data-quality="3">Medium</button>
+                        <button class="rating-btn hard" data-quality="0">Hard</button>
+                    </div>
+                    <div id="save-status" class="status-msg"></div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <a href="#" id="settings-link">Settings</a>
+            <span>v1.0</span>
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+
+</html>
