@@ -9,76 +9,525 @@
 </head>
 
 <body>
-    <div class="container">
-        <header>
-            <div class="header-top">
-                <h1>LeetCode Companion</h1>
+    <!-- ANALYZE PAGE -->
+    <div id="analyze-page" class="page active">
+        <div class="container">
+            <!-- Header -->
+            <header class="analyze-header">
+                <div class="header-top">
+                    <div class="logo-section">
+                        <div class="logo-icon">LC</div>
+                        <h1>LC Companion</h1>
+                    </div>
+                    <button id="nav-to-dashboard" class="icon-btn" title="Dashboard">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                            <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                            <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                            <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                        </svg>
+                    </button>
+                </div>
                 <div id="connection-status" class="status-indicator"></div>
-            </div>
-            <div id="stats-bar" class="hidden">
-                <span title="Current Streak">🔥 <span id="streak-count">-</span></span>
-                <span title="Due Today">📅 <span id="due-count">-</span></span>
-            </div>
-        </header>
+            </header>
 
-        <main>
-            <div id="initial-view">
-                <p class="subtitle">Analyze the current problem to get patterns and insights.</p>
-                <button id="analyze-btn" class="primary-btn">Analyze Problem</button>
-            </div>
-
-            <div id="loading-view" class="hidden">
-                <div class="spinner"></div>
-                <p>Analyzing problem with Gemini...</p>
-            </div>
-
-            <div id="error-view" class="hidden">
-                <p class="error-message"></p>
-                <button id="retry-btn" class="secondary-btn">Retry</button>
-            </div>
-
-            <div id="results-view" class="hidden">
-                <div class="section">
-                    <h2>Pattern</h2>
-                    <div id="pattern-badges" class="badges-container"></div>
-                </div>
-
-                <div class="section">
-                    <h2>Complexity</h2>
-                    <div class="complexity-grid">
-                        <div class="complexity-item">
-                            <span class="label">Time</span>
-                            <span id="time-complexity" class="value"></span>
-                        </div>
-                        <div class="complexity-item">
-                            <span class="label">Space</span>
-                            <span id="space-complexity" class="value"></span>
-                        </div>
+            <!-- Main Content -->
+            <main class="analyze-main">
+                <!-- Initial View -->
+                <div id="initial-view" class="view active">
+                    <div class="intro-content">
+                        <div class="intro-icon">🧠</div>
+                        <h2>Ready to Analyze</h2>
+                        <p class="subtitle">Navigate to a LeetCode problem and click analyze to get AI-powered insights.
+                        </p>
+                        <button id="analyze-btn" class="primary-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.35-4.35"></path>
+                            </svg>
+                            Analyze Problem
+                        </button>
                     </div>
                 </div>
 
-                <div class="section">
-                    <h2>Key Insight</h2>
-                    <p id="key-insight" class="insight-text"></p>
-                </div>
-
-                <div class="section" id="review-section">
-                    <h2>How hard was this?</h2>
-                    <div class="rating-buttons">
-                        <button class="rating-btn easy" data-quality="5">Easy</button>
-                        <button class="rating-btn medium" data-quality="3">Medium</button>
-                        <button class="rating-btn hard" data-quality="0">Hard</button>
+                <!-- Loading View -->
+                <div id="loading-view" class="view">
+                    <div class="loading-content">
+                        <div class="spinner"></div>
+                        <p>Analyzing with Gemini AI...</p>
+                        <p class="loading-subtext">Detecting patterns and complexity</p>
                     </div>
-                    <div id="save-status" class="status-msg"></div>
                 </div>
-            </div>
-        </main>
 
-        <footer>
-            <a href="#" id="settings-link">Settings</a>
-            <span>v1.0</span>
-        </footer>
+                <!-- Error View -->
+                <div id="error-view" class="view">
+                    <div class="error-content">
+                        <div class="error-icon">⚠️</div>
+                        <p class="error-message"></p>
+                        <button id="retry-btn" class="secondary-btn">Retry Analysis</button>
+                    </div>
+                </div>
+
+                <!-- Results View -->
+                <div id="results-view" class="view">
+                    <div class="results-content">
+                        <!-- Problem Info -->
+                        <div class="problem-info">
+                            <h3 id="problem-title">Problem Title</h3>
+                            <span id="problem-difficulty" class="difficulty-badge"></span>
+                        </div>
+
+                        <!-- Patterns Section -->
+                        <div class="section">
+                            <h4>🎯 Detected Patterns</h4>
+                            <div id="pattern-badges" class="pattern-badges"></div>
+                        </div>
+
+                        <!-- Complexity Section -->
+                        <div class="section">
+                            <h4>📊 Complexity Analysis</h4>
+                            <div class="complexity-grid">
+                                <div class="complexity-card">
+                                    <span class="complexity-label">Time</span>
+                                    <span id="time-complexity" class="complexity-value"></span>
+                                </div>
+                                <div class="complexity-card">
+                                    <span class="complexity-label">Space</span>
+                                    <span id="space-complexity" class="complexity-value"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Key Insight Section -->
+                        <div class="section">
+                            <h4>💡 Key Insight</h4>
+                            <p id="key-insight" class="insight-text"></p>
+                        </div>
+
+                        <!-- Quality Rating Section -->
+                        <div class="section review-section">
+                            <h4>How difficult was this for you?</h4>
+                            <div class="rating-buttons">
+                                <button class="rating-btn rating-easy" data-quality="5"
+                                    title="Easy - Got it immediately">
+                                    😊 Easy
+                                </button>
+                                <button class="rating-btn rating-medium" data-quality="3" title="Medium - Needed hints">
+                                    😐 Medium
+                                </button>
+                                <button class="rating-btn rating-hard" data-quality="0" title="Hard - Very challenging">
+                                    😰 Hard
+                                </button>
+                            </div>
+                            <div id="save-status" class="save-status"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
     </div>
+
+    <!-- DASHBOARD PAGE -->
+    <div id="dashboard-page" class="page">
+        <div class="dashboard-container">
+            <!-- Dashboard Header -->
+            <header class="dashboard-header">
+                <button id="nav-to-analyze" class="back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <div class="header-info">
+                    <div class="logo-icon">LC</div>
+                    <h1>LC Companion</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="icon-btn" title="Search">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                    </button>
+                    <button class="icon-btn" title="Notifications">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </button>
+                    <div class="avatar">Y</div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content - Tabbed Sections -->
+            <main class="dashboard-main">
+                <!-- TAB 1: DASHBOARD OVERVIEW -->
+                <section id="tab-dashboard" class="tab-section active">
+                    <!-- Stats Cards Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card streak-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Day Streak</span>
+                                <span class="stat-icon">🔥</span>
+                            </div>
+                            <div class="stat-value" id="stat-streak">-</div>
+                            <div class="stat-progress">
+                                <div class="progress-bar" id="streak-progress"></div>
+                            </div>
+                        </div>
+
+                        <div class="stat-card due-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Due Today</span>
+                                <span class="stat-icon">📚</span>
+                            </div>
+                            <div class="stat-value" id="stat-due">-</div>
+                            <div class="stat-meta" id="overdue-text"></div>
+                        </div>
+
+                        <div class="stat-card solved-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Solved</span>
+                                <span class="stat-icon">✅</span>
+                            </div>
+                            <div class="stat-value" id="stat-solved">-</div>
+                            <div class="stat-meta">of this week</div>
+                        </div>
+
+                        <div class="stat-card mastery-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Mastery</span>
+                                <span class="stat-icon">📈</span>
+                            </div>
+                            <div class="stat-value" id="stat-mastery">-</div>
+                        </div>
+                    </div>
+
+                    <!-- Today's Reviews -->
+                    <div class="section-header">
+                        <h3>Today's Reviews</h3>
+                        <a href="#" class="view-all">View All</a>
+                    </div>
+                    <div id="reviews-list" class="reviews-list">
+                        <div class="empty-state">
+                            <p>No reviews due today! 🎉</p>
+                        </div>
+                    </div>
+
+                    <!-- Activity Heatmap -->
+                    <div class="section-header">
+                        <h3>Activity</h3>
+                        <div class="heatmap-legend">
+                            <span>Less</span>
+                            <div class="legend-item level-0"></div>
+                            <div class="legend-item level-1"></div>
+                            <div class="legend-item level-2"></div>
+                            <div class="legend-item level-3"></div>
+                            <div class="legend-item level-4"></div>
+                            <span>More</span>
+                        </div>
+                    </div>
+                    <div id="heatmap-container" class="heatmap-container"></div>
+                    <p class="heatmap-summary" id="heatmap-summary">Loading activity data...</p>
+
+                    <!-- Pattern Mastery Preview -->
+                    <div class="section-header">
+                        <h3>Pattern Mastery</h3>
+                        <a href="#" class="view-all" id="view-all-patterns">View All</a>
+                    </div>
+                    <div id="patterns-list" class="patterns-list"></div>
+                </section>
+
+                <!-- TAB 2: PROBLEMS -->
+                <section id="tab-problems" class="tab-section">
+                    <div class="section-header">
+                        <h3>All Problems</h3>
+                        <span class="problem-count" id="problem-count-badge">0</span>
+                    </div>
+
+                    <!-- Filters -->
+                    <div class="filter-bar">
+                        <select id="filter-difficulty" class="filter-select">
+                            <option value="all">All Difficulties</option>
+                            <option value="easy">Easy</option>
+                            <option value="medium">Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                        <select id="filter-status" class="filter-select">
+                            <option value="all">All Status</option>
+                            <option value="new">New</option>
+                            <option value="learning">Learning</option>
+                            <option value="reviewing">Reviewing</option>
+                            <option value="mastered">Mastered</option>
+                        </select>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="search-bar">
+                        <input type="text" id="search-problems" class="search-input" placeholder="Search problems...">
+                    </div>
+
+                    <!-- Problems List -->
+                    <div id="problems-list" class="problems-list">
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <p>Loading problems...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 3: DETAILED STATS -->
+                <section id="tab-stats" class="tab-section">
+                    <div class="section-header">
+                        <h3>Statistics</h3>
+                    </div>
+
+                    <!-- Overview Stats -->
+                    <div class="stats-category">
+                        <h4>📊 Overview</h4>
+                        <div class="stat-rows">
+                            <div class="stat-row">
+                                <span class="stat-row-label">Total Problems</span>
+                                <span class="stat-row-value" id="total-problems">-</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-row-label">Problems Mastered</span>
+                                <span class="stat-row-value" id="problems-mastered">-</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-row-label">Current Streak</span>
+                                <span class="stat-row-value" id="current-streak-detail">-</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-row-label">Longest Streak</span>
+                                <span class="stat-row-value" id="longest-streak">-</span>
+                            </div>
+                            <div class="stat-row">
+                                <span class="stat-row-label">Total Reviews</span>
+                                <span class="stat-row-value" id="total-reviews">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Weekly Activity -->
+                    <div class="stats-category">
+                        <h4>📈 This Week</h4>
+                        <div id="weekly-chart" class="weekly-chart"></div>
+                    </div>
+
+                    <!-- Difficulty Breakdown -->
+                    <div class="stats-category">
+                        <h4>🎯 By Difficulty</h4>
+                        <div class="difficulty-bars">
+                            <div class="difficulty-bar">
+                                <div class="difficulty-bar-header">
+                                    <span class="difficulty-label easy-label">Easy</span>
+                                    <span class="difficulty-value" id="easy-count">0 (0%)</span>
+                                </div>
+                                <div class="difficulty-progress">
+                                    <div class="difficulty-fill easy-fill" id="easy-progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="difficulty-bar">
+                                <div class="difficulty-bar-header">
+                                    <span class="difficulty-label medium-label">Medium</span>
+                                    <span class="difficulty-value" id="medium-count">0 (0%)</span>
+                                </div>
+                                <div class="difficulty-progress">
+                                    <div class="difficulty-fill medium-fill" id="medium-progress" style="width: 0%">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="difficulty-bar">
+                                <div class="difficulty-bar-header">
+                                    <span class="difficulty-label hard-label">Hard</span>
+                                    <span class="difficulty-value" id="hard-count">0 (0%)</span>
+                                </div>
+                                <div class="difficulty-progress">
+                                    <div class="difficulty-fill hard-fill" id="hard-progress" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB 4: PATTERNS DETAIL -->
+                <section id="tab-patterns-detail" class="tab-section">
+                    <div class="section-header">
+                        <h3>Pattern Mastery</h3>
+                    </div>
+
+                    <div id="patterns-detail-list" class="patterns-detail-list">
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <p>Loading patterns...</p>
+                        </div>
+                    </div>
+                </section>
+            </main>
+
+            <!-- Bottom Navigation -->
+            <nav class="bottom-nav">
+                <button class="nav-item active" data-nav="dashboard">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                        <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                    </svg>
+                    <span>Dashboard</span>
+                </button>
+                <button class="nav-item" data-nav="problems">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                    </svg>
+                    <span>Problems</span>
+                </button>
+                <button class="nav-item" data-nav="stats">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10"></line>
+                        <line x1="12" y1="20" x2="12" y2="4"></line>
+                        <line x1="6" y1="20" x2="6" y2="14"></line>
+                    </svg>
+                    <span>Stats</span>
+                </button>
+                <button class="nav-item" data-nav="patterns-detail">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                        <path d="M2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                    <span>Patterns</span>
+                </button>
+                <button class="nav-item" data-nav="settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 1v6m0 6v6"></path>
+                        <path d="m4.93 4.93 4.24 4.24m5.66 5.66 4.24 4.24"></path>
+                        <path d="M1 12h6m6 0h6"></path>
+                        <path d="m4.93 19.07 4.24-4.24m5.66-5.66 4.24-4.24"></path>
+                    </svg>
+                    <span>Settings</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div id="settings-page" class="page">
+        <div class="settings-container">
+            <!-- Settings Header -->
+            <header class="settings-header">
+                <button id="settings-back-btn" class="back-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M19 12H5M12 19l-7-7 7-7" />
+                    </svg>
+                </button>
+                <h1>Settings</h1>
+                <div class="header-spacer"></div>
+            </header>
+
+            <!-- Settings Content -->
+            <main class="settings-main">
+                <div class="settings-section">
+                    <h3>Preferences</h3>
+
+                    <!-- Daily Goal -->
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label for="daily-goal">Daily Goal</label>
+                            <p class="setting-description">Number of problems to solve per day</p>
+                        </div>
+                        <input type="number" id="daily-goal" class="setting-input" min="1" max="50" value="5" />
+                    </div>
+
+                    <!-- Theme Preference -->
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label for="theme-toggle">Theme</label>
+                            <p class="setting-description">Dark or light mode</p>
+                        </div>
+                        <div class="toggle-wrapper">
+                            <span class="toggle-label" id="theme-label">Dark</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="theme-toggle" />
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label for="notifications-toggle">Notifications</label>
+                            <p class="setting-description">Remind me about due reviews</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="notifications-toggle" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Backend</h3>
+
+                    <!-- Backend URL -->
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label for="backend-url">Backend URL</label>
+                            <p class="setting-description">FastAPI server address</p>
+                        </div>
+                        <input type="text" id="backend-url" class="setting-input full-width"
+                            value="http://localhost:8000" placeholder="http://localhost:8000" />
+                    </div>
+
+                    <!-- Connection Status -->
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <label>Connection Status</label>
+                            <p class="setting-description">Backend availability</p>
+                        </div>
+                        <div class="connection-badge" id="settings-connection-status">
+                            <span class="status-dot"></span>
+                            <span class="status-text">Checking...</span>
+                        </div>
+                    </div>
+
+                    <!-- Test Connection Button -->
+                    <button id="test-connection-btn" class="secondary-btn full-width">
+                        Test Connection
+                    </button>
+                </div>
+
+                <div class="settings-section">
+                    <h3>About</h3>
+
+                    <div class="about-item">
+                        <span>Version</span>
+                        <span class="about-value">2.0.0</span>
+                    </div>
+                    <div class="about-item">
+                        <span>Build</span>
+                        <span class="about-value">MVP</span>
+                    </div>
+                </div>
+
+                <!-- Save Button -->
+                <button id="save-settings-btn" class="primary-btn full-width save-btn">
+                    Save Settings
+                </button>
+
+                <div id="settings-save-status" class="save-status"></div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../services/api.js"></script>
     <script src="popup.js"></script>
 </body>
 

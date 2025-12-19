@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "LeetCode Companion (Phase 2)",
-    "version": "1.0",
-    "description": "Scrapes LeetCode problem data and analyzes it with Gemini.",
+    "name": "LeetCode Companion",
+    "version": "2.0",
+    "description": "AI-powered LeetCode companion with spaced repetition and dashboard analytics.",
     "permissions": [
         "activeTab",
         "storage"
