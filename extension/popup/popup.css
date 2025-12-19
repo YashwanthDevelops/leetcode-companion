@@ -2148,3 +2148,242 @@ button:active,
 .nav-item:active {
     opacity: 0.8;
 }
+
+/* ==========================================
+   AUTHENTICATION PAGE STYLES
+   ========================================== */
+
+/* Loading Page */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 600px;
+    gap: var(--spacing-lg);
+}
+
+/* Auth Container */
+.auth-container {
+    padding: var(--spacing-xl);
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
+    justify-content: center;
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+}
+
+.auth-header .logo-icon.large {
+    width: 64px;
+    height: 64px;
+    font-size: var(--font-2xl);
+    margin: 0 auto var(--spacing-lg);
+}
+
+.auth-header h1 {
+    font-size: var(--font-xl);
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.auth-subtitle {
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
+
+/* Auth Forms */
+.auth-form {
+    display: none;
+    flex-direction: column;
+    gap: var(--spacing-lg);
+}
+
+.auth-form.active {
+    display: flex;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.form-group label {
+    font-size: var(--font-sm);
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.form-group input {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: var(--font-md);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    box-shadow: 0 0 0 3px rgba(255, 149, 0, 0.1);
+}
+
+.form-group input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.6;
+}
+
+/* Checkbox and Forgot Password */
+.form-checkbox {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: calc(var(--spacing-sm) * -1) 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent-orange);
+}
+
+.checkbox-label span {
+    user-select: none;
+}
+
+.forgot-link {
+    font-size: var(--font-sm);
+    color: var(--accent-orange);
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.forgot-link:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+/* Forgot Password Description */
+.forgot-description {
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: var(--spacing-md);
+}
+
+/* Form Messages */
+.form-error {
+    color: var(--accent-red);
+    font-size: var(--font-sm);
+    min-height: 18px;
+}
+
+.form-success {
+    color: var(--accent-green);
+    font-size: var(--font-sm);
+    min-height: 18px;
+}
+
+/* Auth Buttons */
+.auth-btn {
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    font-size: var(--font-md);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+}
+
+.auth-btn.primary {
+    background: linear-gradient(135deg, var(--accent-yellow), var(--accent-orange));
+    color: var(--bg-primary);
+}
+
+.auth-btn.primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(255, 149, 0, 0.3);
+}
+
+.auth-btn.primary:active {
+    transform: translateY(0);
+}
+
+.auth-btn.primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Auth Switch Links */
+.auth-switch {
+    text-align: center;
+    font-size: var(--font-sm);
+    color: var(--text-secondary);
+}
+
+.auth-switch a {
+    color: var(--accent-orange);
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s;
+}
+
+.auth-switch a:hover {
+    opacity: 0.8;
+    text-decoration: underline;
+}
+
+/* Logout Button (in Settings) */
+.logout-btn {
+    background: transparent;
+    border: 1px solid var(--accent-red);
+    color: var(--accent-red);
+    padding: var(--spacing-md);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-size: var(--font-md);
+    font-weight: 500;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+}
+
+.logout-btn:hover {
+    background: rgba(255, 69, 58, 0.1);
+    transform: translateY(-1px);
+}
+
+.logout-btn:active {
+    transform: translateY(0);
+}
+
+/* User Email in Settings */
+#user-email {
+    font-weight: 600;
+    color: var(--text-primary);
+}

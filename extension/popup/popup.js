@@ -1,19 +1,28 @@
 /**
  * LeetCode Companion - Popup Script
- * Handles navigation, analysis, and dashboard functionality
+ * Handles authentication, navigation, analysis, and dashboard functionality
  */
+
+// ==========================================
+// AUTHENTICATION STATE
+// ==========================================
+
+let currentUser = null;
+let isAuthChecking = false;
 
 // ==========================================
 // PAGE NAVIGATION SYSTEM
 // ==========================================
 
 const PAGES = {
+    LOADING: 'loading',
+    AUTH: 'auth',
     ANALYZE: 'analyze',
     DASHBOARD: 'dashboard',
     SETTINGS: 'settings'
 };
 
-let currentPage = PAGES.ANALYZE;
+let currentPage = PAGES.LOADING;
 let currentProblemData = null;
 
 /**
@@ -34,6 +43,221 @@ function navigateTo(page) {
             loadDashboardData();
         }
     }
+}
+
+// ==========================================
+// AUTHENTICATION FUNCTIONS
+// ==========================================
+
+/**
+ * Check authentication status on startup
+ */
+async function checkAuth() {
+    isAuthChecking = true;
+
+    try {
+        const { token, refreshToken } = await chrome.storage.local.get(['token', 'refreshToken']);
+
+        if (!token) {
+            // No token - show auth page
+            navigateTo(PAGES.AUTH);
+            return;
+        }
+
+        // Validate token with backend
+        const user = await API.getMe(token);
+        currentUser = user;
+
+        // Store user info
+        await chrome.storage.local.set({ user });
+
+        // Token valid - show main app
+        navigateTo(PAGES.ANALYZE);
+
+        // Load user email in settings
+        loadUserInfo();
+
+    } catch (error) {
+        console.log('Auth check failed:', error);
+        // Token invalid - clear and show login
+        await chrome.storage.local.remove(['token', 'refreshToken', 'user']);
+        navigateTo(PAGES.AUTH);
+    } finally {
+        isAuthChecking = false;
+    }
+}
+
+/**
+ * Handle login form submission
+ */
+async function handleLogin(email, password, rememberMe) {
+    const errorEl = document.getElementById('login-error');
+    const submitBtn = document.querySelector('#login-form button[type="submit"]');
+
+    try {
+        errorEl.textContent = '';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Signing in...';
+
+        const response = await API.login(email, password);
+
+        // Store tokens
+        await chrome.storage.local.set({
+            token: response.access_token,
+            refreshToken: response.refresh_token,
+            user: response.user
+        });
+
+        currentUser = response.user;
+
+        // Navigate to main app
+        navigateTo(PAGES.ANALYZE);
+        showToast('Welcome back!', 'success');
+
+        // Load user info in settings
+        loadUserInfo();
+
+    } catch (error) {
+        errorEl.textContent = error.message || 'Invalid email or password';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Sign In';
+    }
+}
+
+/**
+ * Handle signup form submission
+ */
+async function handleSignup(email, password, confirmPassword) {
+    const errorEl = document.getElementById('signup-error');
+    const submitBtn = document.querySelector('#signup-form button[type="submit"]');
+
+    if (password !== confirmPassword) {
+        errorEl.textContent = 'Passwords do not match';
+        return;
+    }
+
+    if (password.length < 6) {
+        errorEl.textContent = 'Password must be at least 6 characters';
+        return;
+    }
+
+    try {
+        errorEl.textContent = '';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Creating account...';
+
+        const response = await API.signup(email, password);
+
+        // Store tokens
+        await chrome.storage.local.set({
+            token: response.access_token,
+            refreshToken: response.refresh_token,
+            user: response.user
+        });
+
+        currentUser = response.user;
+
+        // Navigate to main app
+        navigateTo(PAGES.ANALYZE);
+        showToast('Account created successfully!', 'success');
+
+        // Load user info in settings
+        loadUserInfo();
+
+    } catch (error) {
+        errorEl.textContent = error.message || 'Could not create account';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Create Account';
+    }
+}
+
+/**
+ * Handle forgot password form submission
+ */
+async function handleForgotPassword(email) {
+    const errorEl = document.getElementById('forgot-error');
+    const successEl = document.getElementById('forgot-success');
+    const submitBtn = document.querySelector('#forgot-password-form button[type="submit"]');
+
+    try {
+        errorEl.textContent = '';
+        successEl.textContent = '';
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Sending...';
+
+        await API.forgotPassword(email);
+
+        successEl.textContent = '✓ Password reset email sent! Check your inbox.';
+
+        // Auto-return to login after 3 seconds
+        setTimeout(() => {
+            showLoginForm();
+        }, 3000);
+
+    } catch (error) {
+        errorEl.textContent = error.message || 'Could not send reset email';
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Reset Link';
+    }
+}
+
+/**
+ * Handle logout
+ */
+async function handleLogout() {
+    try {
+        await API.logout();
+    } catch (error) {
+        console.log('Logout error:', error);
+    }
+
+    // Clear local storage
+    await chrome.storage.local.remove(['token', 'refreshToken', 'user']);
+    currentUser = null;
+
+    // Show auth page
+    navigateTo(PAGES.AUTH);
+    showToast('Logged out', 'info');
+}
+
+/**
+ * Load user info into settings page
+ */
+async function loadUserInfo() {
+    const { user } = await chrome.storage.local.get('user');
+    if (user) {
+        const userEmailEl = document.getElementById('user-email');
+        if (userEmailEl) {
+            userEmailEl.textContent = user.email;
+        }
+    }
+}
+
+/**
+ * Toggle to show login form
+ */
+function showLoginForm() {
+    document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+    document.getElementById('login-form').classList.add('active');
+}
+
+/**
+ * Toggle to show signup form
+ */
+function showSignupForm() {
+    document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+    document.getElementById('signup-form').classList.add('active');
+}
+
+/**
+ * Toggle to show forgot password form
+ */
+function showForgotPasswordForm() {
+    document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+    document.getElementById('forgot-password-form').classList.add('active');
 }
 
 // ==========================================
@@ -165,6 +389,86 @@ document.addEventListener('DOMContentLoaded', () => {
     views.loading = document.getElementById('loading-view');
     views.error = document.getElementById('error-view');
     views.results = document.getElementById('results-view');
+
+    // ==========================================
+    // AUTHENTICATION EVENT LISTENERS
+    // ==========================================
+
+    // Check auth on startup
+    checkAuth();
+
+    // Login form
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const rememberMe = document.getElementById('remember-me').checked;
+            handleLogin(email, password, rememberMe);
+        });
+    }
+
+    // Signup form
+    const signupForm = document.getElementById('signup-form');
+    if (signupForm) {
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const confirm = document.getElementById('signup-confirm').value;
+            handleSignup(email, password, confirm);
+        });
+    }
+
+    // Forgot password form
+    const forgotPasswordForm = document.getElementById('forgot-password-form');
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgot-email').value;
+            handleForgotPassword(email);
+        });
+    }
+
+    // Toggle between forms
+    const showSignupLink = document.getElementById('show-signup');
+    if (showSignupLink) {
+        showSignupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showSignupForm();
+        });
+    }
+
+    const showLoginLink = document.getElementById('show-login');
+    if (showLoginLink) {
+        showLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLoginForm();
+        });
+    }
+
+    const forgotPasswordLink = document.getElementById('forgot-password-link');
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showForgotPasswordForm();
+        });
+    }
+
+    const backToLoginLink = document.getElementById('back-to-login');
+    if (backToLoginLink) {
+        backToLoginLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showLoginForm();
+        });
+    }
+
+    // Logout button
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', handleLogout);
+    }
 
     // Navigation buttons
     const navToDashboard = document.getElementById('nav-to-dashboard');

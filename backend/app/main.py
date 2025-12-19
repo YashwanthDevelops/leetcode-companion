@@ -1,16 +1,18 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func, and_
 from datetime import datetime, timedelta, date
+import os
 
 # Import your local files
 from app.database import engine, Base, get_db
-from app.models import User, Problem, UserProblemProgress, ReviewSession, DailyStats # Updated models
+from app.models import User, Problem, UserProblemProgress, ReviewSession, DailyStats
 from app.services.gemini_service import GeminiService
 from app.services.spaced_repetition import SpacedRepetitionService
+from app.auth import get_current_user as get_authenticated_user, get_supabase_client
 
 # 1. Modern Lifespan Handler (Handles Startup/Shutdown)
 @asynccontextmanager
@@ -31,14 +33,43 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="LeetCode Companion Backend", lifespan=lifespan)
 
-# 2. CORS Setup
+# 2. Production CORS Setup
+def get_allowed_origins():
+    """
+    Get allowed CORS origins from environment variable.
+    Always allows chrome-extension://* for the extension.
+    Includes localhost origins only when DEBUG=true.
+    """
+    origins = []
+    
+    # Read ALLOWED_ORIGINS from environment (comma-separated)
+    allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "")
+    if allowed_origins_env:
+        origins = [origin.strip() for origin in allowed_origins_env.split(",") if origin.strip()]
+    
+    # Always allow Chrome extensions
+    origins.append("chrome-extension://*")
+    
+    # Add localhost origins in debug mode
+    if os.getenv("DEBUG", "false").lower() == "true":
+        origins.extend([
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://localhost:8000",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:8000"
+        ])
+    
+    return origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], 
+    allow_origins=get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 # 3. Pydantic Models
 class ProblemInput(BaseModel):
@@ -54,30 +85,198 @@ class SolveInput(BaseModel):
     url: str
     analysis: dict = None  # Optional: cached analysis data
 
-# 4. Helper to get Default User (MVP shortcut)
-async def get_current_user(db: AsyncSession = Depends(get_db)) -> User:
-    # Try to find a default user
-    result = await db.execute(select(User).limit(1))
+# Authentication Models
+class SignUpRequest(BaseModel):
+    email: EmailStr
+    password: str  # Min 6 characters (Supabase requirement)
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class AuthResponse(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+    user: dict
+
+class RefreshTokenRequest(BaseModel):
+    refresh_token: str
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+# 4. Helper to get or create User from authenticated JWT
+async def get_current_user(user_data: dict = Depends(get_authenticated_user), db: AsyncSession = Depends(get_db)) -> User:
+    """
+    Get or create User record from authenticated JWT user data.
+    This ensures the User exists in our database for storing problem progress.
+    """
+    user_id = user_data["id"]
+    email = user_data["email"]
+    
+    # Try to find existing user
+    result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     
     if not user:
-        # Create a default user if none exists
+        # Create user record if doesn't exist
         user = User(
-            email="user@example.com",
-            username="LeetCodeUser",
+            id=user_id,
+            email=email,
+            username=email.split('@')[0],  # Extract username from email
             daily_goal=5
         )
         db.add(user)
         await db.commit()
         await db.refresh(user)
-        
+    
     return user
 
 # 5. Endpoints
 @app.get("/")
 @app.head("/")
 def read_root():
-    return {"status": "ok", "message": "Backend is live with SM-2 Memory!"}
+    return {
+        "status": "healthy",
+        "service": "leetcode-companion-api",
+        "version": "1.0.0",
+        "message": "Backend is live with SM-2 Memory!"
+    }
+
+@app.get("/health")
+async def health_check():
+    return {
+        "status": "ok",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+
+
+# ==========================================
+# AUTHENTICATION ENDPOINTS
+# ==========================================
+
+@app.post("/auth/signup", response_model=AuthResponse)
+async def signup(request: SignUpRequest):
+    """Register a new user with Supabase Auth"""
+    supabase = get_supabase_client()
+    
+    try:
+        response = supabase.auth.sign_up({
+            "email": request.email,
+            "password": request.password
+        })
+        
+        if response.user is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Signup failed. Email may already be registered."
+            )
+        
+        if not response.session:
+            raise HTTPException(
+                status_code=400,
+                detail="Email confirmation required. Please check your inbox."
+            )
+        
+        return AuthResponse(
+            access_token=response.session.access_token,
+            refresh_token=response.session.refresh_token,
+            user={
+                "id": response.user.id,
+                "email": response.user.email
+            }
+        )
+        
+    except Exception as e:
+        error_message = str(e)
+        if "already registered" in error_message.lower():
+            raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail=f"Signup failed: {error_message}")
+
+
+@app.post("/auth/login", response_model=AuthResponse)
+async def login(request: LoginRequest):
+    """Login with email and password"""
+    supabase = get_supabase_client()
+    
+    try:
+        response = supabase.auth.sign_in_with_password({
+            "email": request.email,
+            "password": request.password
+        })
+        
+        if response.user is None or response.session is None:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid email or password"
+            )
+        
+        return AuthResponse(
+            access_token=response.session.access_token,
+            refresh_token=response.session.refresh_token,
+            user={
+                "id": response.user.id,
+                "email": response.user.email
+            }
+        )
+        
+    except Exception as e:
+        error_message = str(e)
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+
+
+@app.post("/auth/logout")
+async def logout(user: dict = Depends(get_authenticated_user)):
+    """Logout current user (token invalidation handled client-side)"""
+    return {"message": "Logged out successfully"}
+
+
+@app.get("/auth/me")
+async def get_me(user: dict = Depends(get_authenticated_user)):
+    """Get current authenticated user"""
+    return user
+
+
+@app.post("/auth/refresh")
+async def refresh_token(request: RefreshTokenRequest):
+    """Refresh access token using refresh token"""
+    supabase = get_supabase_client()
+    
+    try:
+        response = supabase.auth.refresh_session(request.refresh_token)
+        
+        if not response.session:
+            raise HTTPException(
+                status_code=401,
+                detail="Could not refresh token"
+            )
+        
+        return {
+            "access_token": response.session.access_token,
+            "refresh_token": response.session.refresh_token,
+            "token_type": "bearer"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Could not refresh token")
+
+
+@app.post("/auth/forgot-password")
+async def forgot_password(request: ForgotPasswordRequest):
+    """Send password reset email via Supabase"""
+    supabase = get_supabase_client()
+    
+    try:
+        supabase.auth.reset_password_email(request.email)
+        return {"message": "Password reset email sent. Please check your inbox."}
+    except Exception as e:
+        # Don't reveal if email exists for security
+        return {"message": "If the email exists, a password reset link has been sent."}
+
+
+# ==========================================
+# PROBLEM ANALYSIS & SOLVING ENDPOINTS
+# ==========================================
 
 
 @app.post("/analyze")
