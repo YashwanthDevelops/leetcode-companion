@@ -5,8 +5,7 @@ import time
 from typing import Dict, Any, Optional
 from pathlib import Path
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
+import google.generativeai as genai
 
 # Robust .env loading
 # Finds the project root by looking for 'backend' in the path or just going up
@@ -27,8 +26,8 @@ class GeminiService:
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY is not set. Please check your .env file.")
         
-        self.client = genai.Client(api_key=self.api_key)
-        self.model_name = "gemini-flash-latest"
+        genai.configure(api_key=self.api_key)
+        self.model = genai.GenerativeModel('gemini-1.5-flash-latest')
         
         # Rate limiting state
         self.last_request_time = 0
@@ -86,10 +85,10 @@ class GeminiService:
                 
                 prompt = self._build_system_prompt(description)
                 
-                response = await self.client.aio.models.generate_content(
-                    model=self.model_name,
-                    contents=prompt,
-                    config=types.GenerateContentConfig(
+                response = await asyncio.to_thread(
+                    self.model.generate_content,
+                    prompt,
+                    generation_config=genai.types.GenerationConfig(
                         temperature=0.3,
                         top_p=0.95,
                         top_k=40,
